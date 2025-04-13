@@ -1,0 +1,44 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bg-orange {
+  background-color: #ec5228 !important;
+}
+
+.text-orange {
+  color: #ec5228 !important;
+}
+
+.bg-cream {
+  background-color: #ffecdb !important;
+}
+
+.text-cream {
+  color: #ffecdb !important;
+}
+
+/* Example nav style override */
+.navbar-custom {
+  background-color: #ec5228;
+}
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link,
+.navbar-custom .navbar-text {
+  color: #ffffff !important;
+}
+.navbar-custom .nav-link:hover {
+  background-color: #cc411f;
+  color: #ffffff !important;
+}
