@@ -2,6 +2,7 @@ package com.sd.tennis.controller;
 
 import com.sd.tennis.dto.MatchDTO;
 import com.sd.tennis.dto.MatchResponseDTO;
+import com.sd.tennis.factory.ExportStrategyFactory;
 import com.sd.tennis.mapper.MatchMapper;
 import com.sd.tennis.model.Match;
 import com.sd.tennis.model.User;
@@ -120,11 +121,9 @@ public class MatchController {
             @RequestParam(required = false) Integer refereeId) {
         List<MatchDTO> matches = matchService.getFilteredMatches(tournamentId, playerId, refereeId);
         ExportStrategy strategy;
-        if ("csv".equalsIgnoreCase(format)) {
-            strategy = new CsvExportUtil();
-        } else if ("txt".equalsIgnoreCase(format)) {
-            strategy = new TxtExportUtil();
-        } else {
+        try {
+            strategy = ExportStrategyFactory.getStrategy(format);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Invalid format. Use 'csv' or 'txt'.");
         }
         String output = strategy.export(matches);
