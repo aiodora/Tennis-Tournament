@@ -8,6 +8,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Data
 public class UserDTO {
     @NotEmpty(message = "Username cannot be empty")
@@ -35,4 +37,8 @@ public class UserDTO {
     @NotBlank(message = "Phone number cannot be empty")
     @Size(min = 10, max = 15, message = "Phone number must be between 10 and 15 digits")
     private String phoneNumber;
+
+    private LocalDate birthDate;
+    private Integer ranking;
+    private String nationality;
 }

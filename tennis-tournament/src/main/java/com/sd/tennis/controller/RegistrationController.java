@@ -59,4 +59,18 @@ public class RegistrationController {
                 .toList();
         return ResponseEntity.ok(dtoList);
     }
+
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<RegistrationResponseDTO> approve(@PathVariable Integer id) {
+        var reg = registrationService.approveRegistration(id);
+        return ResponseEntity.ok(RegistrationMapper.toRegistrationResponseDTO(reg));
+    }
+
+    @PutMapping("/{id}/deny")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<RegistrationResponseDTO> deny(@PathVariable Integer id) {
+        var reg = registrationService.denyRegistration(id);
+        return ResponseEntity.ok(RegistrationMapper.toRegistrationResponseDTO(reg));
+    }
 }

@@ -3,6 +3,7 @@ package com.sd.tennis.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
@@ -47,5 +48,13 @@ public class Registration {
 
     @Column(name = "status", length = 50)
     private String status;
+
+    @Column(name = "decision_date")
+    private Instant decisionDate;
+
+    @NotNull
+    @ColumnDefault("0")
+    @Column(name = "notification_sent", nullable = false)
+    private Boolean notificationSent = false;
 
 }

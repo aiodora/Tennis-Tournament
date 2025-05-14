@@ -12,4 +12,6 @@ public class RegistrationResponseDTO {
     private String tournamentName;
     private LocalDateTime registrationDate;
     private String status;
+    private LocalDateTime decisionDate;
+    private Boolean notificationSent;
 }

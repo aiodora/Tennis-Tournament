@@ -5,6 +5,8 @@ import com.sd.tennis.model.Registration;
 import com.sd.tennis.model.Tournament;
 import com.sd.tennis.model.User;
 
+import java.time.ZoneId;
+
 public class RegistrationMapper {
 
     public static RegistrationResponseDTO toRegistrationResponseDTO(Registration reg) {
@@ -23,6 +25,12 @@ public class RegistrationMapper {
 
         dto.setRegistrationDate(reg.getRegistrationDate());
         dto.setStatus(reg.getStatus());
+        dto.setDecisionDate(
+                reg.getDecisionDate()==null
+                        ? null
+                        : reg.getDecisionDate().atZone(ZoneId.systemDefault()).toLocalDateTime()
+        );
+        dto.setNotificationSent(reg.getNotificationSent());
 
         return dto;
     }

@@ -117,4 +117,20 @@ public class UserController {
         userService.deleteUser(userId);
         return ResponseEntity.ok("User deleted");
     }
+
+    @GetMapping("/players/filter")
+    @PreAuthorize("hasAuthority('REFEREE')")
+    public ResponseEntity<List<UserResponseDTO>> filterPlayers(
+            @RequestParam(required = false) Integer minRanking,
+            @RequestParam(required = false) Integer maxRanking,
+            @RequestParam(required = false) String nationality,
+            @RequestParam(required = false) Integer minAge,
+            @RequestParam(required = false) Integer maxAge) {
+
+        List<User> players = userService.filterPlayers(minRanking, maxRanking, nationality, minAge, maxAge);
+        List<UserResponseDTO> dtos = players.stream()
+                .map(UserMapper::toUserResponseDTO)
+                .toList();
+        return ResponseEntity.ok(dtos);
+    }
 }

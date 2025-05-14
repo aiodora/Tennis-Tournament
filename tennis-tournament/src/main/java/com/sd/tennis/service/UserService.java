@@ -15,4 +15,5 @@ public interface UserService {
     List<User> getUsersByRole(String role);
     void authenticateUser(LoginRequest lr);
     User createUser(UserDTO userDTO);
+    List<User> filterPlayers(Integer minRanking, Integer maxRanking, String nationality, Integer minAge, Integer maxAge);
 }

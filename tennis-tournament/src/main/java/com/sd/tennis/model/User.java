@@ -3,11 +3,13 @@ package com.sd.tennis.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
@@ -62,6 +64,16 @@ public class User {
 
     @OneToMany(mappedBy = "winner")
     private Set<Match> matches = new LinkedHashSet<>();
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    @Column(name = "ranking")
+    private Integer ranking;
+
+    @Size(max = 50)
+    @Column(name = "nationality", length = 50)
+    private String nationality;
 
     public void setPhoneNumber(String phoneNumber) {
         this.contactInfo = phoneNumber;

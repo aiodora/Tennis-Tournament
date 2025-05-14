@@ -12,6 +12,9 @@ const Register: React.FC = () => {
     firstName: '',
     lastName: '',
     phoneNumber: '',
+   birthDate: '',       // new
+   ranking: '',         // new (string for the input; will parse to number)
+   nationality: '' 
   });
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -24,7 +27,7 @@ const Register: React.FC = () => {
     setErrorMsg('');
 
     try {
-      const payload = { ...formData, role: 'PLAYER' };
+      const payload = { ...formData, role: 'PLAYER', ranking: parseInt(formData.ranking, 10) };
       await api.post('/auth/register', payload);
       alert('Registered successfully! You can now login.');
       navigate('/login');
@@ -126,6 +129,38 @@ const Register: React.FC = () => {
               required
             />
           </div>
+          <div className="mb-3 text-start">
+      <label className="form-label">Birth Date</label>
+      <input
+        className="form-control"
+        name="birthDate"
+        type="date"
+        value={formData.birthDate}
+        onChange={handleChange}
+        required
+      />
+    </div>
+    <div className="mb-3 text-start">
+      <label className="form-label">Ranking</label>
+      <input
+        className="form-control"
+        name="ranking"
+        type="number"
+        value={formData.ranking}
+        onChange={handleChange}
+        required
+      />
+    </div>
+    <div className="mb-3 text-start">
+      <label className="form-label">Nationality</label>
+      <input
+        className="form-control"
+        name="nationality"
+        value={formData.nationality}
+        onChange={handleChange}
+        required
+      />
+    </div>
           <button type="submit" className="btn btn-success w-100">Register</button>
         </form>
         <div className="mt-3 text-center">

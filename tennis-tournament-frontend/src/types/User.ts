@@ -6,5 +6,8 @@ export interface User {
     firstName?: string
     lastName?: string
     phoneNumber?: string
+    birthDate?: string;
+  ranking?: number;
+  nationality?: string;
   }
   

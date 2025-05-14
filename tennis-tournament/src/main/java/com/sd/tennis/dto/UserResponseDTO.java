@@ -2,6 +2,8 @@ package com.sd.tennis.dto;
 
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 public class UserResponseDTO {
     private Integer id;
@@ -11,4 +13,7 @@ public class UserResponseDTO {
     private String firstName;
     private String lastName;
     private String phoneNumber;
+    private LocalDate birthDate;
+    private Integer ranking;
+    private String nationality;
 }

@@ -21,11 +21,42 @@ public class RegistrationServiceImpl implements RegistrationService{
     private final RegistrationRepository registrationRepository;
     private final UserRepository userRepository;
     private final TournamentRepository tournamentRepository;
+    private final EmailService emailService;
 
-    public RegistrationServiceImpl(RegistrationRepository registrationRepository, UserRepository userRepository, TournamentRepository tournamentRepository) {
+    public RegistrationServiceImpl(RegistrationRepository registrationRepository, UserRepository userRepository, TournamentRepository tournamentRepository, EmailService emailService) {
         this.registrationRepository = registrationRepository;
         this.userRepository = userRepository;
         this.tournamentRepository = tournamentRepository;
+        this.emailService = emailService;
+    }
+
+    @Override
+    public Registration approveRegistration(Integer id) {
+        System.out.println("Approving registration with ID: " + id);
+        var reg = getRegistrationById(id);
+        reg.setStatus("APPROVED");
+        reg.setDecisionDate(Instant.now());
+        reg.setNotificationSent(true);
+        reg = registrationRepository.save(reg);
+        emailService.sendRegistrationStatusEmail(
+                reg.getPlayer().getEmail(), reg.getPlayer().getFirstName() + " " + reg.getPlayer().getLastName(),
+                reg.getTournament().getName(), reg.getId(),
+                true);
+        return reg;
+    }
+
+    @Override
+    public Registration denyRegistration(Integer id) {
+        var reg = getRegistrationById(id);
+        reg.setStatus("DENIED");
+        reg.setDecisionDate(Instant.now());
+        reg.setNotificationSent(true);
+        reg = registrationRepository.save(reg);
+        emailService.sendRegistrationStatusEmail(
+                reg.getPlayer().getEmail(), reg.getPlayer().getFirstName() + " " + reg.getPlayer().getLastName(),
+                reg.getTournament().getName(), reg.getId(),
+                false);
+        return reg;
     }
 
     @Override

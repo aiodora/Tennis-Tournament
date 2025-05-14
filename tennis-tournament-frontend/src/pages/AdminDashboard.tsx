@@ -40,7 +40,7 @@ interface Match {
 const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'users'|'tournaments'|'matches'|'export'>('users');
+  const [activeTab, setActiveTab] = useState<'users'|'tournaments'|'matches'|'export' | 'registrations'>('users');
 
   return (
     <div className="container mt-4">
@@ -86,12 +86,22 @@ const AdminDashboard: React.FC = () => {
             Export Matches
           </button>
         </li>
+
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === 'registrations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('registrations')}
+          >
+            Manage Registrations
+          </button>
+        </li>
       </ul>
 
       {activeTab === 'users' && <AdminUsersSection />}
       {activeTab === 'tournaments' && <AdminTournamentsSection />}
       {activeTab === 'matches' && <AdminMatchesSection />}
       {activeTab === 'export' && <AdminExportSection />}
+      {activeTab === 'registrations' && <AdminRegistrationsSection />}
     </div>
   );
 };
@@ -833,7 +843,7 @@ const AdminMatchesSection: React.FC = () => {
 
     try {
       const regRes = await api.get<Registration[]>(`/registrations/tournament/${tId}`);
-      const players = regRes.data.map(r => ({
+      const players = regRes.data.filter(r => r.status === 'APPROVED').map(r => ({
         id: r.playerId,
         username: r.playerUsername,
       }));
@@ -1189,6 +1199,131 @@ const AdminExportSection: React.FC = () => {
       >
         Export Matches (TXT)
       </button>
+    </div>
+  );
+};
+
+
+const AdminRegistrationsSection: React.FC = () => {
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchRegistrations();
+  }, []);
+
+  const fetchRegistrations = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get<Registration[]>('/registrations');
+      setRegistrations(res.data);
+    } catch (err) {
+      handleError(err, 'Error fetching registrations.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleError = (err: unknown, defaultMsg: string) => {
+    let msg = defaultMsg;
+    if (axios.isAxiosError(err) && err.response && err.response.data) {
+      msg = String(err.response.data);
+    } else if (err instanceof Error) {
+      msg = err.message;
+    }
+    setError(msg);
+  };
+
+  const handleApprove = async (id: number) => {
+    if (!window.confirm('Are you sure you want to approve this registration?')) return;
+    try {
+      await api.put(`/registrations/${id}/approve`);
+      fetchRegistrations();
+    } catch (err) {
+      handleError(err, 'Error approving registration.');
+    }
+  };
+
+  const handleDeny = async (id: number) => {
+    if (!window.confirm('Are you sure you want to deny this registration?')) return;
+    try {
+      await api.put(`/registrations/${id}/deny`);
+      fetchRegistrations();
+    } catch (err) {
+      handleError(err, 'Error denying registration.');
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      <h4>Manage Registrations</h4>
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      {loading ? (
+        <div className="text-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Player</th>
+                <th>Tournament</th>
+                <th>Registration Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registrations.map((reg) => (
+                <tr key={reg.id}>
+                  <td>{reg.id}</td>
+                  <td>{reg.playerUsername} (ID: {reg.playerId})</td>
+                  <td>{reg.tournamentName} (ID: {reg.tournamentId})</td>
+                  <td>{new Date(reg.registrationDate).toLocaleString()}</td>
+                  <td>
+                    <span className={`badge ${
+                      reg.status === 'APPROVED' ? 'bg-success' :
+                      reg.status === 'DENIED' ? 'bg-danger' : 'bg-warning'
+                    }`}>
+                      {reg.status}
+                    </span>
+                  </td>
+                  <td>
+                    {reg.status === 'PENDING' && (
+                      <>
+                        <button
+                          className="btn btn-success btn-sm me-2"
+                          onClick={() => handleApprove(reg.id)}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDeny(reg.id)}
+                        >
+                          Deny
+                        </button>
+                      </>
+                    )}
+                    {reg.status !== 'PENDING' && (
+                      <span className="text-muted">Action completed</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {registrations.length === 0 && (
+            <div className="alert alert-info">No registrations found</div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

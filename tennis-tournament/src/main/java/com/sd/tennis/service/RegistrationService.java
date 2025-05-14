@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface RegistrationService {
+    Registration approveRegistration(Integer id);
+    Registration denyRegistration(Integer id);
     Registration registerPlayer(Integer playerId, Integer tournamentId);
     Registration getRegistrationById(Integer id);
     List<Registration> getAllRegistrations();

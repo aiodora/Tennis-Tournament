@@ -8,8 +8,10 @@ import com.sd.tennis.exception.ResourceNotFoundException;
 import com.sd.tennis.model.LoginRequest;
 import com.sd.tennis.model.User;
 import com.sd.tennis.repository.UserRepository;
+import com.sd.tennis.specification.PlayerSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.AllArgsConstructor;
@@ -55,6 +57,9 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setPhoneNumber(userDTO.getPhoneNumber());
+        if (userDTO.getBirthDate() != null)   user.setBirthDate(userDTO.getBirthDate());
+        if (userDTO.getRanking() != null)     user.setRanking(userDTO.getRanking());
+        if (userDTO.getNationality() != null) user.setNationality(userDTO.getNationality());
 
         return userRepository.save(user);
     }
@@ -87,6 +92,9 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getPhoneNumber() != null) {
             user.setPhoneNumber(userDTO.getPhoneNumber());
         }
+        if (userDTO.getBirthDate() != null)   user.setBirthDate(userDTO.getBirthDate());
+        if (userDTO.getRanking() != null)     user.setRanking(userDTO.getRanking());
+        if (userDTO.getNationality() != null) user.setNationality(userDTO.getNationality());
 
         return userRepository.save(user);
     }
@@ -153,7 +161,28 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setPhoneNumber(userDTO.getPhoneNumber());
+        if (userDTO.getBirthDate() != null)   user.setBirthDate(userDTO.getBirthDate());
+        if (userDTO.getRanking() != null)     user.setRanking(userDTO.getRanking());
+        if (userDTO.getNationality() != null) user.setNationality(userDTO.getNationality());
 
         return userRepository.save(user);
+    }
+
+    @Override
+    public List<User> filterPlayers(Integer minRanking,
+                                    Integer maxRanking,
+                                    String nationality,
+                                    Integer minAge,
+                                    Integer maxAge) {
+
+        Specification<User> spec = Specification
+                .where(PlayerSpecification.hasRole("PLAYER"))
+                .and(PlayerSpecification.minRanking(minRanking))
+                .and(PlayerSpecification.maxRanking(maxRanking))
+                .and(PlayerSpecification.nationalityEquals(nationality))
+                .and(PlayerSpecification.minAge(minAge))
+                .and(PlayerSpecification.maxAge(maxAge));
+
+        return userRepository.findAll(spec);
     }
 }

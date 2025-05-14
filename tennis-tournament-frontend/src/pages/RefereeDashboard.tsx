@@ -25,7 +25,20 @@ interface ProfileFormData {
   contactInfo: string;
 }
 
-type ActiveTab = 'matches' | 'profile';
+interface PlayerDTO {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  birthDate: string;
+  ranking: number;
+  nationality: string;
+}
+
+type ActiveTab = 'matches' | 'profile' | 'players';
 
 const RefereeDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -59,10 +72,19 @@ const RefereeDashboard: React.FC = () => {
             My Profile
           </button>
         </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === 'players' ? 'active' : ''}`}
+            onClick={() => setActiveTab('players')}
+          >
+            Players
+          </button>
+        </li>
       </ul>
 
       {activeTab === 'matches' && <MatchesSection />}
       {activeTab === 'profile' && <ProfileSection />}
+      {activeTab === 'players' && <PlayersSection />}
     </div>
   );
 };
@@ -429,6 +451,271 @@ const ProfileSection: React.FC = () => {
           Update Profile
         </button>
       </form>
+    </div>
+  );
+};
+
+
+const PlayersSection: React.FC = () => {
+  const [players, setPlayers] = useState<PlayerDTO[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<PlayerDTO[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [filterError, setFilterError] = useState('');
+  
+  // Filter states
+  const [minRanking, setMinRanking] = useState<number | null>(null);
+  const [maxRanking, setMaxRanking] = useState<number | null>(null);
+  const [nationality, setNationality] = useState<string>('');
+  const [minAge, setMinAge] = useState<number | null>(null);
+  const [maxAge, setMaxAge] = useState<number | null>(null);
+
+  // Fetch all players initially
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await api.get('/users/players');
+        setPlayers(response.data);
+        setFilteredPlayers(response.data);
+      } catch (err) {
+        if (axios.isAxiosError(err)) {
+          setError(err.response?.data?.message || 'Failed to fetch players');
+        } else {
+          setError('An unexpected error occurred');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlayers();
+  }, []);
+
+  // Validate filters before applying
+  const validateFilters = (): boolean => {
+    // Check age filters
+    if (minAge !== null && maxAge !== null && minAge > maxAge) {
+      setFilterError('Minimum age cannot be greater than maximum age');
+      return false;
+    }
+    
+    if ((minAge !== null && minAge < 14) || (maxAge !== null && maxAge < 14)) {
+      setFilterError('Age must be at least 14');
+      return false;
+    }
+    
+    // Check ranking filters
+    if (minRanking !== null && maxRanking !== null && minRanking > maxRanking) {
+      setFilterError('Minimum ranking cannot be greater than maximum ranking');
+      return false;
+    }
+    
+    if ((minRanking !== null && minRanking <= 0) || (maxRanking !== null && maxRanking <= 0)) {
+      setFilterError('Ranking must be greater than 0');
+      return false;
+    }
+    
+    setFilterError('');
+    return true;
+  };
+
+  // Apply filters
+  const applyFilters = useCallback(() => {
+    if (!validateFilters()) {
+      return;
+    }
+    
+    let result = [...players];
+    
+    // Filter by ranking
+    if (minRanking !== null) {
+      result = result.filter(p => p.ranking !== null && p.ranking >= minRanking);
+    }
+    if (maxRanking !== null) {
+      result = result.filter(p => p.ranking !== null && p.ranking <= maxRanking);
+    }
+    
+    // Filter by nationality
+    if (nationality) {
+      result = result.filter(p => 
+        p.nationality && p.nationality.toLowerCase().includes(nationality.toLowerCase())
+      );
+    }
+    
+    // Filter by age
+    if (minAge !== null || maxAge !== null) {
+      result = result.filter(p => {
+        if (!p.birthDate) return false;
+        
+        const birthDate = new Date(p.birthDate);
+        const ageDiffMs = Date.now() - birthDate.getTime();
+        const ageDate = new Date(ageDiffMs);
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        
+        if (minAge !== null && age < minAge) return false;
+        if (maxAge !== null && age > maxAge) return false;
+        return true;
+      });
+    }
+    
+    setFilteredPlayers(result);
+  }, [players, minRanking, maxRanking, nationality, minAge, maxAge]);
+
+  // Reset filters
+  const resetFilters = () => {
+    setMinRanking(null);
+    setMaxRanking(null);
+    setNationality('');
+    setMinAge(null);
+    setMaxAge(null);
+    setFilterError('');
+    setFilteredPlayers(players);
+  };
+
+  return (
+    <div className="mt-3">
+      <h4>Player Search</h4>
+      {error && <div className="alert alert-danger">{error}</div>}
+      
+      {/* Filter Controls */}
+      <div className="card mb-4 p-3">
+        <h5>Filter Players</h5>
+        {filterError && <div className="alert alert-danger">{filterError}</div>}
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Min Ranking</label>
+              <input
+                type="number"
+                className="form-control"
+                value={minRanking || ''}
+                onChange={(e) => setMinRanking(e.target.value ? parseInt(e.target.value) : null)}
+                min="1"
+              />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Max Ranking</label>
+              <input
+                type="number"
+                className="form-control"
+                value={maxRanking || ''}
+                onChange={(e) => setMaxRanking(e.target.value ? parseInt(e.target.value) : null)}
+                min="1"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Country (Nationality)</label>
+              <input
+                type="text"
+                className="form-control"
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                placeholder="e.g. USA, Spain"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Min Age</label>
+              <input
+                type="number"
+                className="form-control"
+                value={minAge || ''}
+                onChange={(e) => setMinAge(e.target.value ? parseInt(e.target.value) : null)}
+                min="14"
+                max="99"
+              />
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label">Max Age</label>
+              <input
+                type="number"
+                className="form-control"
+                value={maxAge || ''}
+                onChange={(e) => setMaxAge(e.target.value ? parseInt(e.target.value) : null)}
+                min="14"
+                max="99"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <div className="d-flex gap-2">
+          <button className="btn btn-primary" onClick={applyFilters}>
+            Apply Filters
+          </button>
+          <button className="btn btn-outline-secondary" onClick={resetFilters}>
+            Reset Filters
+          </button>
+        </div>
+      </div>
+      
+      {/* Results */}
+      {loading ? (
+        <div className="text-center">
+          <div className="spinner-border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Ranking</th>
+                <th>Age</th>
+                <th>Country</th>
+                <th>Contact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPlayers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center">
+                    No players found matching your criteria
+                  </td>
+                </tr>
+              ) : (
+                filteredPlayers.map((player) => {
+                  // Calculate age from birthDate
+                  let age = '-';
+                  if (player.birthDate) {
+                    const birthDate = new Date(player.birthDate);
+                    const ageDiffMs = Date.now() - birthDate.getTime();
+                    const ageDate = new Date(ageDiffMs);
+                    age = Math.abs(ageDate.getUTCFullYear() - 1970).toString();
+                  }
+                  
+                  return (
+                    <tr key={player.id}>
+                      <td>{player.firstName} {player.lastName}</td>
+                      <td>{player.ranking || '-'}</td>
+                      <td>{age}</td>
+                      <td>{player.nationality || '-'}</td>
+                      <td>{player.phoneNumber || '-'}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };
